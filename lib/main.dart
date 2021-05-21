@@ -1,9 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:table_calender_app/ui/pages/add_event.dart';
-import 'package:table_calender_app/ui/pages/view_event.dart';
-
-import 'model/event.dart';
 
 void main() => runApp(MyApp());
 
@@ -16,9 +14,6 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: HomePage(),
-      routes: {
-        "add_event": (_) => AddEventPage(),
-      },
     );
   }
 }
@@ -32,13 +27,41 @@ class _HomePageState extends State<HomePage> {
   CalendarController _controller;
   Map<DateTime, List<dynamic>> _events;
   List<dynamic> _selectedEvents;
+  TextEditingController _eventController;
+  SharedPreferences prefs;
 
   @override
   void initState() {
     super.initState();
     _controller = CalendarController();
+    _eventController = TextEditingController();
     _events = {};
     _selectedEvents = [];
+    initPrefs();
+  }
+
+  initPrefs() async {
+    prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _events = Map<DateTime, List<dynamic>>.from(
+          decodeMap(json.decode(prefs.getString("events") ?? "{}")));
+    });
+  }
+
+  Map<String, dynamic> encodeMap(Map<DateTime, dynamic> map) {
+    Map<String, dynamic> newMap = {};
+    map.forEach((key, value) {
+      newMap[key.toString()] = map[key];
+    });
+    return newMap;
+  }
+
+  Map<DateTime, dynamic> decodeMap(Map<String, dynamic> map) {
+    Map<DateTime, dynamic> newMap = {};
+    map.forEach((key, value) {
+      newMap[DateTime.parse(key)] = map[key];
+    });
+    return newMap;
   }
 
   @override
@@ -102,154 +125,47 @@ class _HomePageState extends State<HomePage> {
               calendarController: _controller,
             ),
             ..._selectedEvents.map((event) => ListTile(
-                  title: Text(event.title),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => EventDetailsPage(
-                                  event: event,
-                                )));
-                  },
+                  title: Text(event),
                 )),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
-        onPressed: () => Navigator.pushNamed(context, 'add_event'),
+        onPressed: _showAddDialog,
       ),
     );
   }
-}
 
-//===========================================================
-// class MyHomePage extends StatefulWidget {
-//   @override
-//   _MyHomePageState createState() => _MyHomePageState();
-// }
-//
-// class _MyHomePageState extends State<MyHomePage> {
-//   String _message = "You are not sign up";
-//   FirebaseAuth _auth;
-//   GoogleSignIn _googleSignIn;
-//
-//   Future<User> _handleSignIn() async {
-//     final GoogleSignInAccount goodleUser = await _googleSignIn.signIn();
-//     final GoogleSignInAuthentication googleAuth =
-//         await goodleUser.authentication;
-//     final AuthCredential credential = GoogleAuthProvider.credential(
-//       accessToken: googleAuth.accessToken,
-//       idToken: googleAuth.idToken,
-//     );
-//     final User user = (await _auth.signInWithCredential(credential)).user;
-//     print("signed in " + user.displayName);
-//     setState(() {
-//       //if login thi bao login
-//       _message = "You are signed in!!";
-//     });
-//     return user;
-//   }
-//
-//   Future _handleSignOut() async {
-//     await _auth.signOut();
-//     await _googleSignIn.signOut();
-//     setState(() {
-//       _message = "Log out successfully";
-//     });
-//   }
-//
-//   Future _checkLogin() async {
-//     // check xem user da login chua
-//     final User user = _auth.currentUser;
-//     if (user != null) {
-//       setState(() {
-//         //hien thi thong bao da log out
-//         _message = "Hello " + user.displayName;
-//       });
-//     }
-//   }
-//
-//   final Future<FirebaseApp> _initialization = Firebase.initializeApp();
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     // TODO: implement build
-//     return Scaffold(
-//         appBar: AppBar(
-//           title: Text('Firebase Login'),
-//         ),
-//         body: FutureBuilder(
-//           future: _initialization,
-//           builder: (context, snapshot) {
-//             if (snapshot.hasError) {
-//               return Text("sthing went wrong");
-//             }
-//             if (snapshot.connectionState == ConnectionState.done) {
-//               _auth = FirebaseAuth.instance;
-//               _googleSignIn = GoogleSignIn();
-//               _checkLogin();
-//               return Center(
-//                 child: Column(
-//                   mainAxisAlignment: MainAxisAlignment.center,
-//                   children: <Widget>[
-//                     Text(_message),
-//                     // ignore: deprecated_member_use
-//                     OutlineButton(
-//                       onPressed: () {
-//                         _handleSignIn();
-//                         // Navigator.push(
-//                         //     context,
-//                         //     MaterialPageRoute(
-//                         //         builder: (context) => ToDoList()));
-//                       },
-//                       child: Text('Login'),
-//                     ),
-//                     // ignore: deprecated_member_use
-//                     OutlineButton(
-//                       onPressed: () {
-//                         _handleSignOut();
-//                       },
-//                       child: Text('Logout'),
-//                     ),
-//                     OutlineButton(
-//                       onPressed: () {
-//                         Navigator.push(
-//                             context,
-//                             MaterialPageRoute(
-//                                 builder: (context) => ToDoList()));
-//                       },
-//                       child: Text('Next page!'),
-//                     ),
-//                   ],
-//                 ),
-//               );
-//             }
-//           },
-//         ));
-//   }
-// }
-//
-// class ToDoList extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     // TODO: implement build
-//     // throw UnimplementedError();
-//     return new MaterialApp(
-//       title: 'To Do List',
-//       home: new Scaffold(
-//         appBar: new AppBar(
-//           title: new Text('Todo List'),
-//         ),
-//         body: Center(
-//           child: ElevatedButton(
-//             onPressed: () {
-//               Navigator.pop(context);
-//             },
-//             child: Text('Go back!'),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
+  _showAddDialog() async {
+    await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+              content: TextField(
+                controller: _eventController,
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text("Save"),
+                  onPressed: () {
+                    if (_eventController.text.isEmpty) return;
+                    if (_events[_controller.selectedDay] != null) {
+                      _events[_controller.selectedDay]
+                          .add(_eventController.text);
+                    } else {
+                      _events[_controller.selectedDay] = [
+                        _eventController.text
+                      ];
+                    }
+                    // prefs.setString("events", json.encode(encodeMap(_events)));
+                    _eventController.clear();
+                    Navigator.pop(context);
+                  },
+                )
+              ],
+            ));
+    setState(() {
+      _selectedEvents = _events[_controller.selectedDay];
+    });
+  }
+}
