@@ -1,6 +1,18 @@
 # flutter_calendar_timetable
 
-A new Flutter project.
+A Flutter project about create and schedule event on calendar for ourself.
+
+## What did we do with this project?
+
++ Login, signup with google account
++ CRUD events on calendar
++ Init event on calendar follow month, week, 2 weeks
+
+## Technology we use:
+
++ Firebase for database
++ Flutter SDK for build App
++ Dart language for programing
 
 ## Getting Started
 
