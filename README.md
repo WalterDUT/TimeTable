@@ -1,4 +1,4 @@
-# flutter_calendar
+# flutter_calendar_timetable
 
 A new Flutter project.
 
